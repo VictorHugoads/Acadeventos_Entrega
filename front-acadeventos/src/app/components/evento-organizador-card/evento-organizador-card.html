@@ -1,0 +1,89 @@
+<div style="background: white; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); border: 1px solid #e5e5e5;">
+
+  <span style="display: inline-block; padding: 5px 10px; background: #e7f1ff; color: #0d6efd; border-radius: 20px; font-size: 13px; margin-bottom: 10px;">
+    {{ evento.categoria }}
+  </span>
+
+  <h2 style="margin: 8px 0;">
+    {{ evento.titulo }}
+  </h2>
+
+  <p style="color: #444;">
+    {{ evento.descricao }}
+  </p>
+
+  <p>
+    <strong>Data:</strong>
+    {{ evento.dataHora | date:'dd/MM/yyyy HH:mm' }}
+  </p>
+
+  <p>
+    <strong>Local:</strong>
+    {{ evento.local }}
+  </p>
+
+  <p>
+    <strong>Status:</strong>
+    {{ status }}
+  </p>
+
+  <p>
+    <strong>Vagas:</strong>
+    {{ vagasDisponiveis }} disponíveis de {{ evento.vagas }}
+  </p>
+
+  <p>
+    <strong>Organizador:</strong>
+    {{ evento.organizador }}
+  </p>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;">
+    <button
+      type="button"
+      (click)="editar()"
+      [disabled]="eventoFinalizado"
+      style="padding: 9px 12px; border: none; border-radius: 6px; background: #0d6efd; color: white; cursor: pointer;"
+    >
+      Editar
+    </button>
+
+    <button
+      type="button"
+      (click)="excluir()"
+      [disabled]="eventoFinalizado"
+      style="padding: 9px 12px; border: none; border-radius: 6px; background: #dc3545; color: white; cursor: pointer;"
+    >
+      Excluir
+    </button>
+
+    <button
+      type="button"
+      (click)="verInscritos()"
+      style="padding: 9px 12px; border: none; border-radius: 6px; background: #6c757d; color: white; cursor: pointer;"
+    >
+      Ver Inscritos
+    </button>
+  </div>
+
+  <p *ngIf="eventoFinalizado" style="color: #777; font-size: 13px;">
+    Evento finalizado não pode ser editado ou excluído.
+  </p>
+
+  <div
+    *ngIf="inscritos"
+    style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;"
+  >
+    <strong>Inscritos:</strong>
+
+    <p *ngIf="inscritos.length === 0">
+      Nenhum inscrito.
+    </p>
+
+    <ul *ngIf="inscritos.length > 0">
+      <li *ngFor="let inscrito of inscritos">
+        {{ inscrito }}
+      </li>
+    </ul>
+  </div>
+
+</div>

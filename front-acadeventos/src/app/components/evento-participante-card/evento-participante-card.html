@@ -1,0 +1,61 @@
+<div style="background:white; border-radius:10px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.10); border:1px solid #e5e5e5;">
+
+  <span style="display:inline-block; padding:5px 10px; background:#e7f1ff; color:#0d6efd; border-radius:20px; font-size:13px;">
+    {{ evento.categoria }}
+  </span>
+
+  <h2 style="margin:8px 0;">
+    {{ evento.titulo }}
+  </h2>
+
+  <p>
+    {{ evento.descricao }}
+  </p>
+
+  <p>
+    <strong>Data:</strong>
+    {{ evento.dataHora | date:'dd/MM/yyyy HH:mm' }}
+  </p>
+
+  <p>
+    <strong>Local:</strong>
+    {{ evento.local }}
+  </p>
+
+  <p>
+    <strong>Status:</strong>
+    {{ status }}
+  </p>
+
+  <p>
+    <strong>Vagas:</strong>
+    {{ vagasDisponiveis }} disponíveis de {{ evento.vagas }}
+  </p>
+
+  <p>
+    <strong>Organizador:</strong>
+    {{ evento.organizador }}
+  </p>
+
+
+  <button
+    *ngIf="inscrito"
+    type="button"
+    (click)="cancelar()"
+    style="padding:10px 14px; border:none; border-radius:6px; background:#dc3545; color:white;"
+  >
+    Cancelar Inscrição
+  </button>
+
+
+  <button
+    *ngIf="!inscrito"
+    type="button"
+    (click)="inscrever()"
+    [disabled]="vagasDisponiveis === 0 || status === 'Finalizado'"
+    style="padding:10px 14px; border:none; border-radius:6px; background:#198754; color:white;"
+  >
+    Inscrever-se
+  </button>
+
+</div>

@@ -1,0 +1,36 @@
+<div class="center-page">
+  <div class="card form-card text-center">
+    <h1>AcadEventos</h1>
+
+    <h2 class="subtitle">Crie sua Conta!</h2>
+
+    <label for="nome">Nome do usuário</label>
+
+    <input
+      id="nome"
+      type="text"
+      [(ngModel)]="nome"
+      placeholder="Digite seu nome"
+    >
+    
+    <p class="info">
+    Cadastro demonstrativo.
+    </p>
+
+    <div class="login-actions">
+      <button type="button" (click)="cadastrarComoParticipante()">
+        Cadastrar-se como Participante
+      </button>
+
+      <button type="button" class="secondary" (click)="cadastrarComoOrganizador()">
+        Cadastrar-se como Organizador
+      </button>
+    </div>
+
+    <div class="info-link">
+      <p>Já tem uma conta?</p>
+      <a (click)="irParaLogin()">Fazer Login</a>
+    </div>
+
+  </div>
+</div>

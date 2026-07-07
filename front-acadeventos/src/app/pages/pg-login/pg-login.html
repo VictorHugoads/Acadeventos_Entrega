@@ -1,0 +1,33 @@
+<div class="center-page">
+  <div class="card form-card text-center">
+    <h1>AcadEventos</h1>
+
+    <p class="subtitle">
+      Sistema de gerenciamento de eventos acadêmicos
+    </p>
+
+    <label for="nome">Nome do usuário</label>
+
+    <input
+      id="nome"
+      type="text"
+      [(ngModel)]="nome"
+      placeholder="Digite seu nome"
+    >
+    
+    <p class="info">
+    Login demonstrativo sem autenticação real.
+    </p>
+
+    <div class="login-actions">
+      <button type="button" (click)="entrar()">
+        Entrar
+      </button>
+
+    <div class="info-link">
+      <p>Não tem uma conta?</p>
+      <a (click)="irParaCadastro()">Cadastre-se aqui</a>
+    </div>
+
+  </div>
+</div>

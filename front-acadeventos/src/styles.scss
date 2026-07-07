@@ -1,0 +1,259 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f7fb;
+  color: #222;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 30px;
+}
+
+.center-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
+  margin-bottom: 20px;
+}
+
+.form-card {
+  width: 100%;
+  max-width: 430px;
+}
+
+h1 {
+  color: #1976d2;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+h2 {
+  color: #333;
+  margin-top: 24px;
+}
+
+.subtitle {
+  color: #555;
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  //margin-bottom: 14px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: #1976d2;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+button:hover {
+  background-color: #0d47a1;
+}
+
+button.secondary {
+  background-color: #2e7d32;
+}
+
+button.secondary:hover {
+  background-color: #1b5e20;
+}
+
+button.danger {
+  background-color: #d32f2f;
+}
+
+button.danger:hover {
+  background-color: #9a0007;
+}
+
+button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.login-actions{ //actions usados no card de login, alterado rpa centralizar os botões na tela
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  flex-direction: column;
+}
+
+.info-link{ //aviso pra criar conta na pagina de login
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #555;
+  font-size: 15px;
+  
+  a{
+    text-decoration: underline;
+  }
+  a:hover{
+    text-decoration: underline;
+    color: #1976d2;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.info {
+  font-size: 13px;
+  color: #666;
+  margin-top: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.event-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.error {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.success {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+/* Barra superior das telas */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Área de filtros */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* Formulário de cadastro/edição de evento */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.form-grid textarea {
+  grid-column: 1 / -1;
+  min-height: 100px;
+}
+
+/* Caixa da lista de inscritos */
+.inscritos-box {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #f4f7fb;
+}
+
+.inscritos-box ul {
+  margin-bottom: 0;
+}
+
+/* Melhor adaptação para celular */
+@media (max-width: 600px) {
+  .page {
+    padding: 18px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

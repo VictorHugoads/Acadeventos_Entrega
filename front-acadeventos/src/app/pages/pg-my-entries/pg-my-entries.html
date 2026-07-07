@@ -1,0 +1,206 @@
+<div style="padding: 24px; font-family: Arial, sans-serif; background: #f4f7fb; min-height: 100vh; color: #222;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h1 style="margin: 0 0 8px 0;">
+        Minhas Inscrições
+      </h1>
+
+      <p style="margin: 0; color: #555;">
+        Usuário: <strong>{{ usuarioNome }}</strong> |
+        Total de inscrições: <strong>{{ eventos.length }}</strong>
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <button
+        type="button"
+        (click)="voltarParaHome()"
+        style="padding: 10px 14px; border: none; border-radius: 6px; background: #0d6efd; color: white; cursor: pointer;"
+      >
+        Voltar para eventos
+      </button>
+
+      <button
+        type="button"
+        (click)="sair()"
+        style="padding: 10px 14px; border: none; border-radius: 6px; background: #dc3545; color: white; cursor: pointer;"
+      >
+        Sair
+      </button>
+    </div>
+  </div>
+
+  <p *ngIf="erro" style="padding: 12px; background: #ffe5e5; color: #a10000; border-radius: 6px;">
+    {{ erro }}
+  </p>
+
+  <p *ngIf="sucesso" style="padding: 12px; background: #e6ffed; color: #0f6b2f; border-radius: 6px;">
+    {{ sucesso }}
+  </p>
+
+  <p *ngIf="carregando">
+    Carregando minhas inscrições...
+  </p>
+
+  <div *ngIf="!carregando && eventos.length === 0" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <p style="margin: 0;">
+      Você ainda não está inscrito em nenhum evento.
+    </p>
+  </div>
+
+  <div *ngIf="!carregando && eventos.length > 0">
+    <section style="margin-bottom: 28px;">
+      <h2>Eventos Futuros</h2>
+
+      <div *ngIf="eventosFuturos.length === 0" style="background: white; padding: 16px; border-radius: 8px;">
+        <p style="margin: 0;">Nenhum evento futuro.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+        <div
+          *ngFor="let evento of eventosFuturos; trackBy: trackByEventoId"
+          style="background: white; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); border: 1px solid #e5e5e5;"
+        >
+          <span style="display: inline-block; padding: 5px 10px; background: #e7f1ff; color: #0d6efd; border-radius: 20px; font-size: 13px; margin-bottom: 10px;">
+            {{ evento.categoria }}
+          </span>
+
+          <h3 style="margin: 8px 0;">{{ evento.titulo }}</h3>
+
+          <p>{{ evento.descricao }}</p>
+
+          <p>
+            <strong>Data:</strong>
+            {{ evento.dataHora | date:'dd/MM/yyyy HH:mm' }}
+          </p>
+
+          <p>
+            <strong>Local:</strong>
+            {{ evento.local }}
+          </p>
+
+          <p>
+            <strong>Status:</strong>
+            {{ statusEvento(evento) }}
+          </p>
+
+          <p>
+            <strong>Vagas:</strong>
+            {{ vagasDisponiveis(evento) }} disponíveis de {{ evento.vagas }}
+          </p>
+
+          <p>
+            <strong>Organizador:</strong>
+            {{ evento.organizador }}
+          </p>
+
+          <button
+            type="button"
+            (click)="cancelarInscricao(evento)"
+            style="padding: 10px 14px; border: none; border-radius: 6px; background: #dc3545; color: white; cursor: pointer;"
+          >
+            Cancelar Inscrição
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom: 28px;">
+      <h2>Eventos Ocorrendo</h2>
+
+      <div *ngIf="eventosOcorrendo.length === 0" style="background: white; padding: 16px; border-radius: 8px;">
+        <p style="margin: 0;">Nenhum evento ocorrendo agora.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+        <div
+          *ngFor="let evento of eventosOcorrendo; trackBy: trackByEventoId"
+          style="background: white; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); border: 1px solid #e5e5e5;"
+        >
+          <span style="display: inline-block; padding: 5px 10px; background: #fff3cd; color: #8a6d00; border-radius: 20px; font-size: 13px; margin-bottom: 10px;">
+            {{ evento.categoria }}
+          </span>
+
+          <h3 style="margin: 8px 0;">{{ evento.titulo }}</h3>
+
+          <p>{{ evento.descricao }}</p>
+
+          <p>
+            <strong>Data:</strong>
+            {{ evento.dataHora | date:'dd/MM/yyyy HH:mm' }}
+          </p>
+
+          <p>
+            <strong>Local:</strong>
+            {{ evento.local }}
+          </p>
+
+          <p>
+            <strong>Status:</strong>
+            {{ statusEvento(evento) }}
+          </p>
+
+          <p>
+            <strong>Organizador:</strong>
+            {{ evento.organizador }}
+          </p>
+
+          <button
+            type="button"
+            (click)="cancelarInscricao(evento)"
+            style="padding: 10px 14px; border: none; border-radius: 6px; background: #dc3545; color: white; cursor: pointer;"
+          >
+            Cancelar Inscrição
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom: 28px;">
+      <h2>Eventos Finalizados</h2>
+
+      <div *ngIf="eventosFinalizados.length === 0" style="background: white; padding: 16px; border-radius: 8px;">
+        <p style="margin: 0;">Nenhum evento finalizado.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+        <div
+          *ngFor="let evento of eventosFinalizados; trackBy: trackByEventoId"
+          style="background: white; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); border: 1px solid #e5e5e5; opacity: 0.85;"
+        >
+          <span style="display: inline-block; padding: 5px 10px; background: #e9ecef; color: #495057; border-radius: 20px; font-size: 13px; margin-bottom: 10px;">
+            {{ evento.categoria }}
+          </span>
+
+          <h3 style="margin: 8px 0;">{{ evento.titulo }}</h3>
+
+          <p>{{ evento.descricao }}</p>
+
+          <p>
+            <strong>Data:</strong>
+            {{ evento.dataHora | date:'dd/MM/yyyy HH:mm' }}
+          </p>
+
+          <p>
+            <strong>Local:</strong>
+            {{ evento.local }}
+          </p>
+
+          <p>
+            <strong>Status:</strong>
+            {{ statusEvento(evento) }}
+          </p>
+
+          <p>
+            <strong>Organizador:</strong>
+            {{ evento.organizador }}
+          </p>
+
+          <p style="color: #666;">
+            Evento finalizado.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
