@@ -55,9 +55,13 @@
         style="padding: 10px; border: 1px solid #ccc; border-radius: 6px;"
       >
         <option value="">Todas as categorias</option>
-        <option value="Tecnologia">Tecnologia</option>
-        <option value="Banco de Dados">Banco de Dados</option>
-        <option value="Carreira">Carreira</option>
+
+        <option
+          *ngFor="let cat of categoriasDisponiveis"
+          [value]="cat"
+        >
+          {{ cat }}
+        </option>
       </select>
 
       <select
@@ -85,6 +89,13 @@
         Limpar
       </button>
     </div>
+
+    <p
+      *ngIf="categoriasDisponiveis.length === 0"
+      style="margin: 12px 0 0 0; color: #777; font-size: 14px;"
+    >
+      Nenhuma categoria cadastrada ainda.
+    </p>
   </div>
 
   <div *ngIf="ehOrganizador" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
@@ -196,7 +207,6 @@
 
   <div *ngIf="!carregando && eventos.length > 0" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
     <ng-container *ngFor="let evento of eventos; trackBy: trackByEventoId">
-
       <app-evento-participante-card
         *ngIf="!ehOrganizador"
         [evento]="evento"
@@ -217,7 +227,6 @@
         (excluirClick)="excluirEvento($event)"
         (verInscritosClick)="verInscritos($event)"
       ></app-evento-organizador-card>
-
     </ng-container>
   </div>
 </div>

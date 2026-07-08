@@ -56,7 +56,8 @@ const eventoSchema = new mongoose.Schema(
     organizador: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      lowercase: true
     },
     inscritos: {
       type: [String],
@@ -69,6 +70,7 @@ const eventoSchema = new mongoose.Schema(
   }
 );
 
+// Modelo Usuario
 const usuarioSchema = new mongoose.Schema(
   {
     username: {
@@ -85,20 +87,40 @@ const usuarioSchema = new mongoose.Schema(
     }
   },
   {
-    collection: "usuarios",
+    collection: 'usuarios',
     timestamps: true
   }
 );
 
-
 const Evento = mongoose.model('Evento', eventoSchema, 'eventos');
 const Usuario = mongoose.model('Usuario', usuarioSchema, 'usuarios');
+
+function normalizarTexto(valor) {
+  return typeof valor === 'string' ? valor.trim().toLowerCase() : '';
+}
+
+function escaparRegex(valor) {
+  return String(valor).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function criarFiltroOrganizador(organizador) {
+  const organizadorNormalizado = normalizarTexto(organizador);
+
+  if (!organizadorNormalizado) {
+    return null;
+  }
+
+  return {
+    $regex: `^${escaparRegex(organizadorNormalizado)}$`,
+    $options: 'i'
+  };
+}
 
 function extrairDadosUsuario(dados = {}) {
   const isOrganizer = dados.isOrganizer === true || dados.isOrganizer === 'true';
 
   return {
-    username: typeof dados.username === 'string' ? dados.username.trim().toLowerCase() : '',
+    username: normalizarTexto(dados.username),
     isOrganizer
   };
 }
@@ -110,7 +132,7 @@ async function criarUsuarioNoBanco(dados) {
 }
 
 async function verificarUsuarioPorUsername(username) {
-  const usernameNormalizado = typeof username === 'string' ? username.trim().toLowerCase() : '';
+  const usernameNormalizado = normalizarTexto(username);
 
   if (!usernameNormalizado) {
     return null;
@@ -129,7 +151,7 @@ async function verificarOrganizadorExistente(username) {
   return usuario;
 }
 
-function extrairDadosEvento(dados = {}) {
+function extrairDadosEvento(dados = {}, permitirAlterarOrganizador = true) {
   const camposPermitidos = [
     'titulo',
     'descricao',
@@ -137,22 +159,26 @@ function extrairDadosEvento(dados = {}) {
     'local',
     'categoria',
     'vagas',
-    'imagem',
-    'organizador'
+    'imagem'
   ];
+
+  if (permitirAlterarOrganizador) {
+    camposPermitidos.push('organizador');
+  }
 
   return camposPermitidos.reduce((acumulado, campo) => {
     if (dados[campo] !== undefined) {
-      acumulado[campo] = campo === 'organizador' && typeof dados[campo] === 'string'
-        ? dados[campo].trim().toLowerCase()
-        : dados[campo];
+      if (campo === 'organizador') {
+        acumulado[campo] = normalizarTexto(dados[campo]);
+      } else {
+        acumulado[campo] = dados[campo];
+      }
     }
 
     return acumulado;
   }, {});
 }
 
-// Calcula status do evento
 function calcularStatus(dataHora) {
   const agora = new Date();
   const dataEvento = new Date(dataHora);
@@ -161,25 +187,35 @@ function calcularStatus(dataHora) {
     return 'futuro';
   }
 
-  const duasHorasDepois = new Date(dataEvento.getTime() + 2 * 60 * 60 * 1000);
+  const umaHoraDepois = new Date(dataEvento.getTime() + 60 * 60 * 1000);
 
-  if (agora >= dataEvento && agora <= duasHorasDepois) {
+  if (agora >= dataEvento && agora <= umaHoraDepois) {
     return 'ocorrendo';
   }
 
   return 'finalizado';
 }
 
-// Formata evento retornado para o front-end
 function formatarEvento(evento) {
   const obj = evento.toObject();
 
   return {
     ...obj,
     status: calcularStatus(obj.dataHora),
-    vagasDisponiveis: obj.vagas - obj.inscritos.length,
+    vagasDisponiveis: Math.max(obj.vagas - obj.inscritos.length, 0),
     totalInscritos: obj.inscritos.length
   };
+}
+
+function validarIdEvento(id) {
+  return mongoose.isValidObjectId(id);
+}
+
+function usuarioEhDonoDoEvento(evento, organizadorInformado) {
+  const donoDoEvento = normalizarTexto(evento.organizador);
+  const organizadorNormalizado = normalizarTexto(organizadorInformado);
+
+  return donoDoEvento && organizadorNormalizado && donoDoEvento === organizadorNormalizado;
 }
 
 // Rota inicial
@@ -278,17 +314,25 @@ app.get('/eventos', async (req, res) => {
     }
 
     if (categoria) {
-      filtro.categoria = { $regex: categoria, $options: 'i' };
+      filtro.categoria = categoria;
     }
 
     if (organizador) {
-      filtro.organizador = { $regex: organizador, $options: 'i' };
+      const filtroOrganizador = criarFiltroOrganizador(organizador);
+
+      if (filtroOrganizador) {
+        filtro.organizador = filtroOrganizador;
+      }
     }
 
     let ordenacao = { dataHora: 1 };
 
-    if (ordenar === 'desc') {
+    if (ordenar === 'desc' || ordenar === 'data-desc') {
       ordenacao = { dataHora: -1 };
+    }
+
+    if (ordenar === 'asc' || ordenar === 'data-asc') {
+      ordenacao = { dataHora: 1 };
     }
 
     const eventos = await Evento.find(filtro).sort(ordenacao);
@@ -301,10 +345,41 @@ app.get('/eventos', async (req, res) => {
   }
 });
 
+// Listar categorias reais dos eventos
+app.get('/eventos/categorias', async (req, res) => {
+  try {
+    const { organizador } = req.query;
+
+    const filtro = {};
+
+    if (organizador) {
+      const filtroOrganizador = criarFiltroOrganizador(organizador);
+
+      if (filtroOrganizador) {
+        filtro.organizador = filtroOrganizador;
+      }
+    }
+
+    const categorias = await Evento.distinct('categoria', filtro);
+
+    const categoriasFormatadas = categorias
+      .filter(Boolean)
+      .map(categoria => String(categoria).trim())
+      .filter(categoria => categoria.length > 0)
+      .sort((a, b) => a.localeCompare(b));
+
+    res.json(categoriasFormatadas);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message
+    });
+  }
+});
+
 // Buscar evento pelo ID
 app.get('/eventos/:id', async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    if (!validarIdEvento(req.params.id)) {
       return res.status(400).json({
         error: 'ID inválido'
       });
@@ -329,7 +404,7 @@ app.get('/eventos/:id', async (req, res) => {
 // Criar evento
 app.post('/eventos', async (req, res) => {
   try {
-    const dadosEvento = extrairDadosEvento(req.body);
+    const dadosEvento = extrairDadosEvento(req.body, true);
     const organizador = await verificarOrganizadorExistente(dadosEvento.organizador);
 
     if (!organizador) {
@@ -351,7 +426,7 @@ app.post('/eventos', async (req, res) => {
 // Editar evento
 app.put('/eventos/:id', async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    if (!validarIdEvento(req.params.id)) {
       return res.status(400).json({
         error: 'ID inválido'
       });
@@ -362,6 +437,28 @@ app.put('/eventos/:id', async (req, res) => {
     if (!eventoAtual) {
       return res.status(404).json({
         error: 'Evento não encontrado'
+      });
+    }
+
+    const organizadorInformado = req.body.organizador;
+
+    if (!organizadorInformado) {
+      return res.status(400).json({
+        error: 'Informe o organizador responsável pela edição.'
+      });
+    }
+
+    const organizador = await verificarOrganizadorExistente(organizadorInformado);
+
+    if (!organizador) {
+      return res.status(400).json({
+        error: 'O organizador informado precisa existir e ter perfil de organizador.'
+      });
+    }
+
+    if (!usuarioEhDonoDoEvento(eventoAtual, organizadorInformado)) {
+      return res.status(403).json({
+        error: 'Você só pode editar eventos criados por você.'
       });
     }
 
@@ -377,19 +474,11 @@ app.put('/eventos/:id', async (req, res) => {
       });
     }
 
-    if (req.body.organizador) {
-      const organizador = await verificarOrganizadorExistente(req.body.organizador);
-
-      if (!organizador) {
-        return res.status(400).json({
-          error: 'O organizador informado precisa existir e ter perfil de organizador.'
-        });
-      }
-    }
+    const dadosAtualizados = extrairDadosEvento(req.body, false);
 
     const evento = await Evento.findByIdAndUpdate(
       req.params.id,
-      extrairDadosEvento(req.body),
+      dadosAtualizados,
       {
         new: true,
         runValidators: true
@@ -407,7 +496,7 @@ app.put('/eventos/:id', async (req, res) => {
 // Excluir evento
 app.delete('/eventos/:id', async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    if (!validarIdEvento(req.params.id)) {
       return res.status(400).json({
         error: 'ID inválido'
       });
@@ -418,6 +507,28 @@ app.delete('/eventos/:id', async (req, res) => {
     if (!evento) {
       return res.status(404).json({
         error: 'Evento não encontrado'
+      });
+    }
+
+    const organizadorInformado = req.query.organizador || req.body.organizador;
+
+    if (!organizadorInformado) {
+      return res.status(400).json({
+        error: 'Informe o organizador responsável pela exclusão.'
+      });
+    }
+
+    const organizador = await verificarOrganizadorExistente(organizadorInformado);
+
+    if (!organizador) {
+      return res.status(400).json({
+        error: 'O organizador informado precisa existir e ter perfil de organizador.'
+      });
+    }
+
+    if (!usuarioEhDonoDoEvento(evento, organizadorInformado)) {
+      return res.status(403).json({
+        error: 'Você só pode excluir eventos criados por você.'
       });
     }
 
@@ -458,7 +569,7 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
       });
     }
 
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    if (!validarIdEvento(req.params.id)) {
       return res.status(400).json({
         error: 'ID inválido'
       });
@@ -479,6 +590,7 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
     }
 
     const agora = new Date();
+
     const eventoAtualizado = await Evento.findOneAndUpdate(
       {
         _id: req.params.id,
@@ -539,7 +651,7 @@ app.post('/eventos/:id/cancelar-inscricao', async (req, res) => {
       });
     }
 
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    if (!validarIdEvento(req.params.id)) {
       return res.status(400).json({
         error: 'ID inválido'
       });
@@ -599,7 +711,7 @@ app.get('/inscricoes/:participante', async (req, res) => {
 // Ver inscritos por evento
 app.get('/eventos/:id/inscritos', async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    if (!validarIdEvento(req.params.id)) {
       return res.status(400).json({
         error: 'ID inválido'
       });
@@ -610,6 +722,28 @@ app.get('/eventos/:id/inscritos', async (req, res) => {
     if (!evento) {
       return res.status(404).json({
         error: 'Evento não encontrado'
+      });
+    }
+
+    const organizadorInformado = req.query.organizador;
+
+    if (!organizadorInformado) {
+      return res.status(400).json({
+        error: 'Informe o organizador responsável pela consulta.'
+      });
+    }
+
+    const organizador = await verificarOrganizadorExistente(organizadorInformado);
+
+    if (!organizador) {
+      return res.status(400).json({
+        error: 'O organizador informado precisa existir e ter perfil de organizador.'
+      });
+    }
+
+    if (!usuarioEhDonoDoEvento(evento, organizadorInformado)) {
+      return res.status(403).json({
+        error: 'Você só pode visualizar inscritos de eventos criados por você.'
       });
     }
 

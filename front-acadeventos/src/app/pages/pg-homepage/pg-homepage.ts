@@ -39,6 +39,7 @@ export class PgHomepage implements OnInit {
   usuarioPerfil = localStorage.getItem('usuarioPerfil') || 'participante';
 
   eventos: Evento[] = [];
+  categoriasDisponiveis: string[] = [];
 
   texto = '';
   categoria = '';
@@ -75,11 +76,46 @@ export class PgHomepage implements OnInit {
 
   ngOnInit(): void {
     console.log('PG HOMEPAGE CARREGOU');
+    this.carregarCategorias();
     this.carregarEventos();
   }
 
   get ehOrganizador(): boolean {
     return this.usuarioPerfil === 'organizador';
+  }
+
+  private get usuarioNormalizado(): string {
+    return this.usuarioNome.toLowerCase().trim();
+  }
+
+  async carregarCategorias(): Promise<void> {
+    try {
+      const params = new URLSearchParams();
+
+      if (this.ehOrganizador) {
+        params.set('organizador', this.usuarioNormalizado);
+      }
+
+      const query = params.toString();
+      const url = query
+        ? `${this.apiUrl}/eventos/categorias?${query}`
+        : `${this.apiUrl}/eventos/categorias`;
+
+      const resposta = await this.fetchComTimeout(url, 10000);
+
+      if (!resposta.ok) {
+        throw new Error(`Erro HTTP ${resposta.status}`);
+      }
+
+      const dados = await resposta.json();
+
+      this.categoriasDisponiveis = Array.isArray(dados) ? dados : [];
+      this.atualizarTela();
+    } catch (err) {
+      console.error('Erro ao carregar categorias:', err);
+      this.categoriasDisponiveis = [];
+      this.atualizarTela();
+    }
   }
 
   async carregarEventos(): Promise<void> {
@@ -101,6 +137,10 @@ export class PgHomepage implements OnInit {
 
       if (this.ordenar) {
         params.set('ordenar', this.ordenar);
+      }
+
+      if (this.ehOrganizador) {
+        params.set('organizador', this.usuarioNormalizado);
       }
 
       const query = params.toString();
@@ -189,7 +229,7 @@ export class PgHomepage implements OnInit {
       categoria: this.eventoForm.categoria.trim(),
       vagas: Number(this.eventoForm.vagas),
       imagem: this.eventoForm.imagem?.trim() || '',
-      organizador: this.usuarioNome.toLowerCase(),
+      organizador: this.usuarioNormalizado,
       inscritos: this.eventoForm.inscritos || []
     };
 
@@ -219,6 +259,7 @@ export class PgHomepage implements OnInit {
         : 'Evento criado com sucesso.';
 
       this.cancelarFormulario();
+      await this.carregarCategorias();
       await this.carregarEventos();
     } catch (err: any) {
       console.error('Erro ao salvar evento:', err);
@@ -231,6 +272,12 @@ export class PgHomepage implements OnInit {
 
   editarEvento(evento: Evento): void {
     if (!evento._id) {
+      return;
+    }
+
+    if (!this.usuarioEhDonoDoEvento(evento)) {
+      this.erro = 'Você só pode editar eventos criados por você.';
+      this.atualizarTela();
       return;
     }
 
@@ -265,6 +312,12 @@ export class PgHomepage implements OnInit {
       return;
     }
 
+    if (!this.usuarioEhDonoDoEvento(evento)) {
+      this.erro = 'Você só pode excluir eventos criados por você.';
+      this.atualizarTela();
+      return;
+    }
+
     if (this.eventoFinalizado(evento)) {
       this.erro = 'Evento finalizado não pode ser excluído.';
       this.atualizarTela();
@@ -278,9 +331,15 @@ export class PgHomepage implements OnInit {
     }
 
     try {
-      const resposta = await this.fetchComTimeout(`${this.apiUrl}/eventos/${evento._id}`, 10000, {
-        method: 'DELETE'
-      });
+      const organizador = encodeURIComponent(this.usuarioNormalizado);
+
+      const resposta = await this.fetchComTimeout(
+        `${this.apiUrl}/eventos/${evento._id}?organizador=${organizador}`,
+        10000,
+        {
+          method: 'DELETE'
+        }
+      );
 
       const dados = await resposta.json().catch(() => ({}));
 
@@ -289,6 +348,7 @@ export class PgHomepage implements OnInit {
       }
 
       this.sucesso = 'Evento excluído com sucesso.';
+      await this.carregarCategorias();
       await this.carregarEventos();
     } catch (err: any) {
       console.error('Erro ao excluir evento:', err);
@@ -315,7 +375,7 @@ export class PgHomepage implements OnInit {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          participante: this.usuarioNome.toLowerCase()
+          participante: this.usuarioNormalizado
         })
       });
 
@@ -346,7 +406,7 @@ export class PgHomepage implements OnInit {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          participante: this.usuarioNome.toLowerCase()
+          participante: this.usuarioNormalizado
         })
       });
 
@@ -366,8 +426,7 @@ export class PgHomepage implements OnInit {
   }
 
   estaInscrito(evento: Evento): boolean {
-    const usuario = this.usuarioNome.toLowerCase();
-    return evento.inscritos?.includes(usuario) || false;
+    return evento.inscritos?.includes(this.usuarioNormalizado) || false;
   }
 
   async verInscritos(evento: Evento): Promise<void> {
@@ -375,8 +434,19 @@ export class PgHomepage implements OnInit {
       return;
     }
 
+    if (!this.usuarioEhDonoDoEvento(evento)) {
+      this.erro = 'Você só pode visualizar inscritos de eventos criados por você.';
+      this.atualizarTela();
+      return;
+    }
+
     try {
-      const resposta = await this.fetchComTimeout(`${this.apiUrl}/eventos/${evento._id}/inscritos`, 10000);
+      const organizador = encodeURIComponent(this.usuarioNormalizado);
+
+      const resposta = await this.fetchComTimeout(
+        `${this.apiUrl}/eventos/${evento._id}/inscritos?organizador=${organizador}`,
+        10000
+      );
 
       const dados = await resposta.json();
 
@@ -445,6 +515,10 @@ export class PgHomepage implements OnInit {
     return evento._id || String(index);
   }
 
+  private usuarioEhDonoDoEvento(evento: Evento): boolean {
+    return evento.organizador?.toLowerCase().trim() === this.usuarioNormalizado;
+  }
+
   private limparFormulario(): void {
     this.eventoForm = {
       titulo: '',
@@ -454,7 +528,7 @@ export class PgHomepage implements OnInit {
       categoria: '',
       vagas: 1,
       imagem: '',
-      organizador: this.usuarioNome.toLowerCase(),
+      organizador: this.usuarioNormalizado,
       inscritos: []
     };
   }
