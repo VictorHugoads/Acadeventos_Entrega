@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 export interface Evento {
   _id?: string;
@@ -21,7 +21,8 @@ export interface Evento {
   selector: 'app-evento-organizador-card',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './evento-organizador-card.html'
+  templateUrl: './evento-organizador-card.html',
+  styleUrls: ['./evento-organizador-card.scss']
 })
 export class EventoOrganizadorCard {
 
