@@ -1,4 +1,4 @@
-<div style="background: white; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); border: 1px solid #e5e5e5;">
+<div class="card">
 
   <span style="display: inline-block; padding: 5px 10px; background: #e7f1ff; color: #0d6efd; border-radius: 20px; font-size: 13px; margin-bottom: 10px;">
     {{ evento.categoria }}
@@ -37,12 +37,12 @@
     {{ evento.organizador }}
   </p>
 
-  <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;">
+  <div class="actions">
     <button
       type="button"
       (click)="editar()"
       [disabled]="eventoFinalizado"
-      style="padding: 9px 12px; border: none; border-radius: 6px; background: #0d6efd; color: white; cursor: pointer;"
+      class="btn btn-primary"
     >
       Editar
     </button>
@@ -51,7 +51,7 @@
       type="button"
       (click)="excluir()"
       [disabled]="eventoFinalizado"
-      style="padding: 9px 12px; border: none; border-radius: 6px; background: #dc3545; color: white; cursor: pointer;"
+      class="btn btn-danger"
     >
       Excluir
     </button>
@@ -59,19 +59,19 @@
     <button
       type="button"
       (click)="verInscritos()"
-      style="padding: 9px 12px; border: none; border-radius: 6px; background: #6c757d; color: white; cursor: pointer;"
+      class="btn btn-secondary"
     >
       Ver Inscritos
     </button>
   </div>
 
-  <p *ngIf="eventoFinalizado" style="color: #777; font-size: 13px;">
+  <p *ngIf="eventoFinalizado" class="event-note">
     Evento finalizado não pode ser editado ou excluído.
   </p>
 
   <div
     *ngIf="inscritos"
-    style="margin-top: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;"
+    class="inscritos-box"
   >
     <strong>Inscritos:</strong>
 

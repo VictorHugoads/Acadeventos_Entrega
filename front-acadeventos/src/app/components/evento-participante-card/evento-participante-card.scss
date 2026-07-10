@@ -1,0 +1,33 @@
+.card {
+	background: white;
+	border-radius: 10px;
+	padding: 18px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	border: 1px solid #e5e5e5;
+}
+
+.btn {
+	padding: 10px 14px;
+	border: none;
+	border-radius: 6px;
+	color: white;
+}
+
+.btn-success {
+	background: #198754;
+}
+
+.btn-danger {
+	background: #dc3545;
+}
+
+.badge-finalizado {
+	display: inline-flex;
+	align-items: center;
+	padding: 8px 12px;
+	border-radius: 999px;
+	background: #e9ecef;
+	color: #6c757d;
+	font-size: 14px;
+	font-weight: 600;
+}

@@ -1,4 +1,4 @@
-<div style="background:white; border-radius:10px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.10); border:1px solid #e5e5e5;">
+<div class="card">
 
   <span style="display:inline-block; padding:5px 10px; background:#e7f1ff; color:#0d6efd; border-radius:20px; font-size:13px;">
     {{ evento.categoria }}
@@ -36,26 +36,29 @@
     <strong>Organizador:</strong>
     {{ evento.organizador }}
   </p>
+  <ng-container *ngIf="status?.toLowerCase() === 'finalizado'; else actionsAtivas">
+    <span class="badge-finalizado">Evento já finalizado</span>
+  </ng-container>
 
+  <ng-template #actionsAtivas>
+    <button
+      *ngIf="inscrito"
+      type="button"
+      (click)="cancelar()"
+      class="btn btn-danger"
+    >
+      Cancelar Inscrição
+    </button>
 
-  <button
-    *ngIf="inscrito"
-    type="button"
-    (click)="cancelar()"
-    style="padding:10px 14px; border:none; border-radius:6px; background:#dc3545; color:white;"
-  >
-    Cancelar Inscrição
-  </button>
-
-
-  <button
-    *ngIf="!inscrito"
-    type="button"
-    (click)="inscrever()"
-    [disabled]="vagasDisponiveis === 0 || status === 'Finalizado'"
-    style="padding:10px 14px; border:none; border-radius:6px; background:#198754; color:white;"
-  >
-    Inscrever-se
-  </button>
+    <button
+      *ngIf="!inscrito"
+      type="button"
+      (click)="inscrever()"
+      [disabled]="vagasDisponiveis === 0"
+      class="btn btn-success"
+    >
+      Inscrever-se
+    </button>
+  </ng-template>
 
 </div>
